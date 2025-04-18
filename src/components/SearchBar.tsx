@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
+  isSearching: boolean;
 }
 
-const SearchBar = ({ onSearch }: SearchBarProps) => {
+const SearchBar = ({ onSearch, isSearching }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -43,7 +44,7 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
           }
         `}
       >
-        {isTyping ? (
+        {isTyping || isSearching ? (
           <Loader2 className="w-5 h-5 text-white/50 ml-3 animate-spin" />
         ) : (
           <Search className="w-5 h-5 text-white/50 ml-3" />

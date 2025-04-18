@@ -39,6 +39,7 @@ const mockResults: SearchResultProps[] = [
 const Index = () => {
   const [results, setResults] = useState<SearchResultProps[]>(mockResults);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
   const handleSearch = (query: string) => {
     if (!query.trim()) {
@@ -47,7 +48,9 @@ const Index = () => {
       return;
     }
 
-    setIsSearching(true);
+    if (!isSearching) {
+      setIsSearching(true);
+    }
     
     // Simulate search delay
     setTimeout(() => {
@@ -58,6 +61,7 @@ const Index = () => {
       );
       setResults(filteredResults);
       setIsSearching(false);
+      setSearchPerformed(true);
     }, 500);
   };
 
@@ -69,7 +73,7 @@ const Index = () => {
             Unified Search
           </span>
         </h1>
-        <SearchBar onSearch={handleSearch} />
+        <SearchBar onSearch={handleSearch} isSearching={isSearching} />
         
         <div className="mt-8 space-y-4">
           {isSearching ? (
