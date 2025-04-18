@@ -74,11 +74,14 @@ const Index = () => {
     try {
       const searchResults = await performSemanticSearch(query);
       
-      // Transform API results to match our UI format
+      // Transform API results to match our UI format, with preview snippet
       const transformedResults = searchResults.map(result => ({
         platform: result.metadata.source as 'slack' | 'jira' | 'confluence' | 'drive',
         title: result.metadata.topic || 'Document',
-        preview: result.pageContent,
+        // Extract first 150 characters of pageContent as preview
+        preview: result.pageContent.length > 150 
+          ? result.pageContent.substring(0, 150) + '...' 
+          : result.pageContent,
         timestamp: result.metadata.date || 'Recent',
         link: '#',
         score: result.score
