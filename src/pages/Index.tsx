@@ -1,7 +1,6 @@
 
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import type { SearchResultProps } from "@/components/SearchResult";
 
 const mockResults: SearchResultProps[] = [
@@ -42,12 +41,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-background">
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-900 to-gray-800">
       <div className="w-full max-w-4xl px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground">Unified Search</h1>
-          <ThemeToggle />
-        </div>
+        <h1 className="text-4xl font-bold text-center mb-8 text-white">Unified Search</h1>
         <SearchBar onSearch={handleSearch} />
         
         <div className="mt-8 space-y-4">
@@ -61,4 +57,3 @@ const Index = () => {
 };
 
 export default Index;
-
