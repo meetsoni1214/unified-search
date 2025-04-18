@@ -19,38 +19,37 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
     <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
       <div 
         className={`
-          glass-morphism 
+          search-bar-glass
           relative 
           flex 
           items-center 
           p-2 
-          rounded-xl 
-          shadow-lg 
+          rounded-2xl
           transition-all 
           duration-300 
           ${isFocused 
-            ? 'ring-2 ring-white/30 border-white/40' 
-            : 'border-white/20'
+            ? 'ring-2 ring-white/20 border-white/20' 
+            : 'border-white/10'
           }
         `}
       >
-        <Search className="w-5 h-5 text-white/70 ml-3" />
+        <Search className="w-5 h-5 text-white/50 ml-3" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="Search across all platforms..."
+          placeholder="Ask me anything..."
           className="
             w-full 
             px-4 
             py-3 
             bg-transparent 
             text-white 
-            placeholder-white/50 
+            placeholder-white/40
             focus:outline-none
-            rounded-xl
+            text-lg
           "
         />
       </div>
