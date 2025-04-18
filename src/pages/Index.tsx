@@ -1,10 +1,14 @@
-import { useState, useCallback } from "react";
+
+import { useState, useCallback, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
 import type { SearchResultProps } from "@/components/SearchResult";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Slack, FileText, Database } from "lucide-react";
+import { Slack, FileText, Database, BrainCircuit } from "lucide-react";
 import TenantIdModal from "@/components/TenantIdModal";
+import APIKeysModal from "@/components/APIKeysModal";
+import { queryPinecone, PineconeResult } from "@/utils/pineconeService";
+import { toast } from "@/hooks/use-toast";
 
 const mockResults: SearchResultProps[] = [
   {
@@ -42,8 +46,39 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [tenantId, setTenantId] = useState("default");
+  const [apiKeys, setApiKeys] = useState({
+    pineconeApiKey: "",
+    pineconeIndexName: "",
+    openaiApiKey: ""
+  });
+  const [isUsingPinecone, setIsUsingPinecone] = useState(false);
 
-  const handleSearch = useCallback((query: string) => {
+  // Check if Pinecone API key is available
+  useEffect(() => {
+    const hasPineconeKeys = !!localStorage.getItem("pinecone_api_key") && 
+                            !!localStorage.getItem("pinecone_index_name") &&
+                            !!localStorage.getItem("openai_api_key");
+    setIsUsingPinecone(hasPineconeKeys);
+    
+    if (hasPineconeKeys) {
+      setApiKeys({
+        pineconeApiKey: localStorage.getItem("pinecone_api_key") || "",
+        pineconeIndexName: localStorage.getItem("pinecone_index_name") || "",
+        openaiApiKey: localStorage.getItem("openai_api_key") || ""
+      });
+    }
+  }, []);
+
+  const handleApiKeysChange = useCallback((newKeys: {
+    pineconeApiKey: string;
+    pineconeIndexName: string;
+    openaiApiKey: string;
+  }) => {
+    setApiKeys(newKeys);
+    setIsUsingPinecone(!!newKeys.pineconeApiKey && !!newKeys.pineconeIndexName && !!newKeys.openaiApiKey);
+  }, []);
+
+  const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setResults([]);
       setIsSearching(false);
@@ -53,30 +88,86 @@ const Index = () => {
 
     setIsSearching(true);
     
+    if (isUsingPinecone) {
+      try {
+        // Use Pinecone for semantic search
+        const pineconeResults = await queryPinecone(query, {
+          apiKey: apiKeys.pineconeApiKey,
+          indexName: apiKeys.pineconeIndexName,
+          namespace: tenantId !== "default" ? tenantId : undefined,
+          topK: 10
+        });
+        
+        // Transform Pinecone results to SearchResultProps format
+        const formattedResults: SearchResultProps[] = pineconeResults.map(result => ({
+          platform: result.metadata.platform as "slack" | "jira" | "confluence" | "drive",
+          title: result.metadata.title,
+          preview: result.metadata.content,
+          timestamp: result.metadata.timestamp,
+          link: result.metadata.link
+        }));
+        
+        setResults(formattedResults);
+      } catch (error) {
+        console.error("Error searching with Pinecone:", error);
+        toast({
+          title: "Semantic Search Error",
+          description: "Failed to perform semantic search. Check your API keys and try again.",
+          variant: "destructive"
+        });
+        
+        // Fallback to mock results
+        const filteredResults = mockResults.filter(
+          result =>
+            result.title.toLowerCase().includes(query.toLowerCase()) ||
+            result.preview.toLowerCase().includes(query.toLowerCase())
+        );
+        setResults(filteredResults);
+      }
+    } else {
+      // Use mock results with basic filtering
+      setTimeout(() => {
+        const filteredResults = mockResults.filter(
+          result =>
+            result.title.toLowerCase().includes(query.toLowerCase()) ||
+            result.preview.toLowerCase().includes(query.toLowerCase())
+        );
+        setResults(filteredResults);
+      }, 300);
+    }
+    
     setTimeout(() => {
-      const filteredResults = mockResults.filter(
-        result =>
-          result.title.toLowerCase().includes(query.toLowerCase()) ||
-          result.preview.toLowerCase().includes(query.toLowerCase())
-      );
-      setResults(filteredResults);
       setIsSearching(false);
       setSearchPerformed(true);
-    }, 300);
-  }, []);
+    }, isUsingPinecone ? 0 : 300);
+  }, [apiKeys, isUsingPinecone, tenantId]);
 
   return (
     <div className="min-h-screen flex flex-col items-center gradient-bg">
       <div className="w-full max-w-4xl px-4 py-8 relative">
-        <TenantIdModal
-          currentTenantId={tenantId}
-          onTenantIdChange={setTenantId}
-        />
+        <div className="absolute right-4 top-4 flex gap-2">
+          <APIKeysModal onKeysChange={handleApiKeysChange} />
+          <TenantIdModal
+            currentTenantId={tenantId}
+            onTenantIdChange={setTenantId}
+          />
+        </div>
+        
         <h1 className="font-jakarta text-5xl font-bold text-center mb-8 text-white tracking-wide">
           <span className="bg-gradient-to-r from-white/90 to-white/70 bg-clip-text text-transparent">
             Unified Search
           </span>
         </h1>
+        
+        <div className="flex items-center justify-center mb-2">
+          {isUsingPinecone && (
+            <div className="flex items-center gap-1 text-green-400 text-sm mb-2">
+              <BrainCircuit className="h-4 w-4" />
+              <span>Semantic Search Enabled</span>
+            </div>
+          )}
+        </div>
+        
         <SearchBar onSearch={handleSearch} isSearching={isSearching} />
         
         <div className="mt-8 space-y-4">
