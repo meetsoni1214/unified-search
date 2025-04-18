@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,11 +20,13 @@ interface TenantIdModalProps {
 
 const TenantIdModal = ({ currentTenantId, onTenantIdChange }: TenantIdModalProps) => {
   const [tenantId, setTenantId] = React.useState(currentTenantId);
+  const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onTenantIdChange(tenantId);
+    setOpen(false);
     toast({
       title: "Tenant ID Updated",
       description: "Your tenant ID has been successfully updated.",
@@ -31,7 +34,7 @@ const TenantIdModal = ({ currentTenantId, onTenantIdChange }: TenantIdModalProps
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
