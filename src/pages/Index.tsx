@@ -3,7 +3,7 @@ import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
 import type { SearchResultProps } from "@/components/SearchResult";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Slack, FileText, Database } from "lucide-react";
+import { Slack, FileText, Database } from "lucide-react";
 
 const mockResults: SearchResultProps[] = [
   {
@@ -96,11 +96,6 @@ const Index = () => {
             )
           ) : (
             <div className="text-center space-y-8">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-3xl" />
-                <Search className="w-24 h-24 text-white/40 mx-auto relative" />
-              </div>
-              
               <div className="text-white/70 max-w-2xl mx-auto space-y-6">
                 <h2 className="text-3xl font-medium bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
                   Search Across All Platforms
