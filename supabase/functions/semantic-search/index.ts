@@ -25,6 +25,9 @@ serve(async (req) => {
       throw new Error('Missing required API keys')
     }
 
+    console.log("Starting semantic search with query:", query)
+    console.log("Using index:", pineconeIndexName)
+
     // First, generate embeddings using OpenAI
     const configuration = new Configuration({ apiKey: openaiApiKey })
     const openai = new OpenAIApi(configuration)
@@ -34,9 +37,15 @@ serve(async (req) => {
       input: query,
     })
 
+    if (!embeddingResponse.data || !embeddingResponse.data.data || embeddingResponse.data.data.length === 0) {
+      throw new Error('Failed to generate embeddings')
+    }
+
+    console.log("Generated embeddings successfully")
     const queryEmbedding = embeddingResponse.data.data[0].embedding
 
     // Query Pinecone with the embedding
+    console.log("Querying Pinecone API...")
     const pineconeResponse = await fetch(`https://api.pinecone.io/v1/indexes/${pineconeIndexName}/query`, {
       method: 'POST',
       headers: {
@@ -51,18 +60,21 @@ serve(async (req) => {
     })
 
     if (!pineconeResponse.ok) {
-      throw new Error('Failed to query Pinecone')
+      const errorText = await pineconeResponse.text()
+      console.error('Pinecone API error:', errorText)
+      throw new Error(`Failed to query Pinecone: ${pineconeResponse.status} ${errorText}`)
     }
 
     const results = await pineconeResponse.json()
+    console.log("Pinecone query successful, matches found:", results.matches?.length || 0)
     
     // Transform results to match the frontend's expected format
-    const transformedResults = results.matches.map((match: any) => ({
-      platform: match.metadata.platform || 'unknown',
-      title: match.metadata.title || 'Untitled',
-      preview: match.metadata.content || 'No preview available',
-      timestamp: match.metadata.timestamp || 'Unknown time',
-      link: match.metadata.link || '#',
+    const transformedResults = results.matches.map((match) => ({
+      platform: match.metadata?.platform || 'unknown',
+      title: match.metadata?.title || 'Untitled',
+      preview: match.metadata?.content || 'No preview available',
+      timestamp: match.metadata?.timestamp || 'Unknown time',
+      link: match.metadata?.link || '#',
       score: match.score
     }))
 
