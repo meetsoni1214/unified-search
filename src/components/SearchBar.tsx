@@ -1,6 +1,6 @@
 
-import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -9,14 +9,24 @@ interface SearchBarProps {
 const SearchBar = ({ onSearch }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(query);
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      onSearch(query);
+      setIsTyping(false);
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [query, onSearch]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+    setIsTyping(true);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
+    <form onSubmit={(e) => e.preventDefault()} className="w-full max-w-3xl mx-auto">
       <div 
         className={`
           search-bar-glass
@@ -33,11 +43,15 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
           }
         `}
       >
-        <Search className="w-5 h-5 text-white/50 ml-3" />
+        {isTyping ? (
+          <Loader2 className="w-5 h-5 text-white/50 ml-3 animate-spin" />
+        ) : (
+          <Search className="w-5 h-5 text-white/50 ml-3" />
+        )}
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleInputChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="Ask me anything..."

@@ -1,7 +1,9 @@
 
+import { useState } from "react";
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
 import type { SearchResultProps } from "@/components/SearchResult";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const mockResults: SearchResultProps[] = [
   {
@@ -35,9 +37,27 @@ const mockResults: SearchResultProps[] = [
 ];
 
 const Index = () => {
+  const [results, setResults] = useState<SearchResultProps[]>(mockResults);
+  const [isSearching, setIsSearching] = useState(false);
+
   const handleSearch = (query: string) => {
-    console.log("Searching for:", query);
-    // Will be implemented in later phases
+    if (!query.trim()) {
+      setResults(mockResults);
+      return;
+    }
+
+    setIsSearching(true);
+    
+    // Simulate search delay
+    setTimeout(() => {
+      const filteredResults = mockResults.filter(
+        result =>
+          result.title.toLowerCase().includes(query.toLowerCase()) ||
+          result.preview.toLowerCase().includes(query.toLowerCase())
+      );
+      setResults(filteredResults);
+      setIsSearching(false);
+    }, 500);
   };
 
   return (
@@ -51,9 +71,26 @@ const Index = () => {
         <SearchBar onSearch={handleSearch} />
         
         <div className="mt-8 space-y-4">
-          {mockResults.map((result, index) => (
-            <SearchResult key={index} {...result} />
-          ))}
+          {isSearching ? (
+            // Loading skeletons
+            Array(3).fill(null).map((_, index) => (
+              <div key={index} className="glass-effect rounded-lg p-4">
+                <div className="flex gap-3">
+                  <Skeleton className="h-5 w-5" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : results.length > 0 ? (
+            results.map((result, index) => (
+              <SearchResult key={index} {...result} />
+            ))
+          ) : (
+            <div className="text-center text-white/70">No results found</div>
+          )}
         </div>
       </div>
     </div>
