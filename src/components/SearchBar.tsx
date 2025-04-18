@@ -1,6 +1,6 @@
 
 import { Search, Loader2 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -11,6 +11,7 @@ const SearchBar = ({ onSearch, isSearching }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Use debounce effect to update the debounced query
   useEffect(() => {
@@ -20,6 +21,23 @@ const SearchBar = ({ onSearch, isSearching }: SearchBarProps) => {
 
     return () => clearTimeout(timer);
   }, [query]);
+
+  // Add event listener for Enter key
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && !event.ctrlKey && !event.altKey && !event.metaKey) {
+        // Only focus if we're not already in an input field
+        const activeElement = document.activeElement;
+        if (activeElement?.tagName !== 'INPUT' && activeElement?.tagName !== 'TEXTAREA') {
+          event.preventDefault();
+          inputRef.current?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   // Only trigger search when debounced query changes
   useEffect(() => {
@@ -54,6 +72,7 @@ const SearchBar = ({ onSearch, isSearching }: SearchBarProps) => {
           <Search className="w-5 h-5 text-white/50 ml-3" />
         )}
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={handleInputChange}
