@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
@@ -44,8 +45,28 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [tenantId, setTenantId] = useState("default");
+  const [isSemanticEnabled, setIsSemanticEnabled] = useState(false);
 
-  const handleSearch = useCallback(async (query: string) => {
+  // Check if semantic search is enabled
+  useEffect(() => {
+    const checkSemanticSettings = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('semantic-search', {
+          body: { query: "", tenantId }
+        });
+        
+        if (!error) {
+          setIsSemanticEnabled(true);
+        }
+      } catch (error) {
+        console.log("Semantic search unavailable:", error);
+      }
+    };
+    
+    checkSemanticSettings();
+  }, [tenantId]);
+
+  const handleSearch = useCallback(async (query: string, currentTenantId: string) => {
     if (!query.trim()) {
       setResults([]);
       setIsSearching(false);
@@ -57,17 +78,20 @@ const Index = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('semantic-search', {
-        body: { query }
+        body: { query, tenantId: currentTenantId }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error from semantic-search function:", error);
+        throw error;
+      }
       
       setResults(data || []);
     } catch (error) {
       console.error("Error performing semantic search:", error);
       toast({
         title: "Search Error",
-        description: "Failed to perform semantic search. Falling back to basic search.",
+        description: error.message || "Failed to perform semantic search. Falling back to basic search.",
         variant: "destructive"
       });
       
@@ -101,15 +125,15 @@ const Index = () => {
         </h1>
         
         <div className="flex items-center justify-center mb-2">
-          {/* {isUsingPinecone && (
+          {isSemanticEnabled && (
             <div className="flex items-center gap-1 text-green-400 text-sm mb-2">
               <BrainCircuit className="h-4 w-4" />
               <span>Semantic Search Enabled</span>
             </div>
-          )} */}
+          )}
         </div>
         
-        <SearchBar onSearch={handleSearch} isSearching={isSearching} />
+        <SearchBar onSearch={handleSearch} isSearching={isSearching} tenantId={tenantId} />
         
         <div className="mt-8 space-y-4">
           {isSearching ? (

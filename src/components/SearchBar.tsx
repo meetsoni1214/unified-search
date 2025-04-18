@@ -3,11 +3,12 @@ import { Search, Loader2 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface SearchBarProps {
-  onSearch: (query: string) => void;
+  onSearch: (query: string, tenantId: string) => void;
   isSearching: boolean;
+  tenantId: string;
 }
 
-const SearchBar = ({ onSearch, isSearching }: SearchBarProps) => {
+const SearchBar = ({ onSearch, isSearching, tenantId }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -41,8 +42,8 @@ const SearchBar = ({ onSearch, isSearching }: SearchBarProps) => {
 
   // Only trigger search when debounced query changes
   useEffect(() => {
-    onSearch(debouncedQuery);
-  }, [debouncedQuery, onSearch]);
+    onSearch(debouncedQuery, tenantId);
+  }, [debouncedQuery, onSearch, tenantId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
