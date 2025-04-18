@@ -43,6 +43,7 @@ const Index = () => {
   const handleSearch = (query: string) => {
     if (!query.trim()) {
       setResults(mockResults);
+      setIsSearching(false);
       return;
     }
 
