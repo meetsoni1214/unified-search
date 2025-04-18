@@ -1,12 +1,14 @@
-
 interface SearchResult {
   id: string;
   score: number;
-  pageContent: string;
+  content: string;
   metadata: {
-    id: string;
+    document_id?: string;
+    file_name?: string;
+    file_type?: string;
     source?: string;
     topic?: string;
+    date?: string;
     [key: string]: any;
   };
 }
