@@ -1,6 +1,6 @@
 
 import { Search, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -10,20 +10,24 @@ interface SearchBarProps {
 const SearchBar = ({ onSearch, isSearching }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
+  // Use debounce effect to update the debounced query
   useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      onSearch(query);
-      setIsTyping(false);
-    }, 300);
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 500);
 
-    return () => clearTimeout(debounceTimer);
-  }, [query, onSearch]);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  // Only trigger search when debounced query changes
+  useEffect(() => {
+    onSearch(debouncedQuery);
+  }, [debouncedQuery, onSearch]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
-    setIsTyping(true);
   };
 
   return (
@@ -44,7 +48,7 @@ const SearchBar = ({ onSearch, isSearching }: SearchBarProps) => {
           }
         `}
       >
-        {isTyping || isSearching ? (
+        {isSearching ? (
           <Loader2 className="w-5 h-5 text-white/50 ml-3 animate-spin" />
         ) : (
           <Search className="w-5 h-5 text-white/50 ml-3" />

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
 import type { SearchResultProps } from "@/components/SearchResult";
@@ -41,16 +41,16 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
+    // Clear search state when query is empty
     if (!query.trim()) {
       setResults(mockResults);
       setIsSearching(false);
       return;
     }
 
-    if (!isSearching) {
-      setIsSearching(true);
-    }
+    // Set searching state
+    setIsSearching(true);
     
     // Simulate search delay
     setTimeout(() => {
@@ -62,8 +62,8 @@ const Index = () => {
       setResults(filteredResults);
       setIsSearching(false);
       setSearchPerformed(true);
-    }, 500);
-  };
+    }, 300);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center gradient-bg">
