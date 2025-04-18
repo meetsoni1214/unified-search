@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { OpenAIEmbeddings } from "npm:@langchain/openai@0.0.14"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,39 +25,28 @@ serve(async (req) => {
     }
 
     console.log("Starting semantic search with query:", query)
-    console.log("Using index:", pineconeIndexName)
+    console.log("Using LangChain with index:", pineconeIndexName)
 
-    // First, generate embeddings using OpenAI directly with fetch API instead of the SDK
-    console.log("Generating embeddings with OpenAI...")
-    const embeddingResponse = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${openaiApiKey}`
-      },
-      body: JSON.stringify({
-        model: "text-embedding-ada-002",
-        input: query
-      })
+    // Set up LangChain embeddings
+    const embeddings = new OpenAIEmbeddings({
+      openAIApiKey: openaiApiKey,
+      batchSize: 1, // Process one text at a time
+      modelName: "text-embedding-ada-002"
     });
 
-    if (!embeddingResponse.ok) {
-      const errorData = await embeddingResponse.text();
-      console.error("OpenAI API error:", errorData);
-      throw new Error(`Failed to generate embeddings: ${embeddingResponse.status} ${errorData}`);
-    }
-
-    const embeddingData = await embeddingResponse.json();
+    console.log("Generating embeddings with LangChain...")
     
-    if (!embeddingData.data || !embeddingData.data[0] || !embeddingData.data[0].embedding) {
-      console.error("Unexpected OpenAI response format:", JSON.stringify(embeddingData));
-      throw new Error('Invalid embedding response format from OpenAI');
+    // Generate embeddings using LangChain
+    let queryEmbedding;
+    try {
+      queryEmbedding = await embeddings.embedQuery(query);
+      console.log("Generated embeddings successfully");
+    } catch (embeddingError) {
+      console.error("LangChain embedding error:", embeddingError);
+      throw new Error(`Failed to generate embeddings: ${embeddingError.message}`);
     }
 
-    console.log("Generated embeddings successfully");
-    const queryEmbedding = embeddingData.data[0].embedding;
-
-    // Query Pinecone with the embedding
+    // Query Pinecone directly with the embedding from LangChain
     console.log("Querying Pinecone API...");
     const pineconeResponse = await fetch(`https://api.pinecone.io/v1/indexes/${pineconeIndexName}/query`, {
       method: 'POST',
@@ -74,7 +64,14 @@ serve(async (req) => {
     if (!pineconeResponse.ok) {
       const errorText = await pineconeResponse.text();
       console.error('Pinecone API error:', errorText);
-      throw new Error(`Failed to query Pinecone: ${pineconeResponse.status} ${errorText}`);
+      
+      // If we got a 404, the index might not exist or be incorrectly named
+      if (pineconeResponse.status === 404) {
+        console.error('Index not found. Check the PINECONE_INDEX_NAME value.');
+        throw new Error(`Pinecone index "${pineconeIndexName}" not found. Please verify the index name.`);
+      } else {
+        throw new Error(`Failed to query Pinecone: ${pineconeResponse.status} ${errorText}`);
+      }
     }
 
     const results = await pineconeResponse.json();
