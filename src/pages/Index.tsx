@@ -1,13 +1,11 @@
-
 import { useState, useCallback, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
 import type { SearchResultProps } from "@/components/SearchResult";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slack, FileText, Database, BrainCircuit } from "lucide-react";
-import TenantIdModal from "@/components/TenantIdModal";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { checkApiHealth, performSemanticSearch } from "@/services/semanticSearchApi";
 
 const mockResults: SearchResultProps[] = [
   {
@@ -44,29 +42,25 @@ const Index = () => {
   const [results, setResults] = useState<SearchResultProps[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
-  const [tenantId, setTenantId] = useState("default");
   const [isSemanticEnabled, setIsSemanticEnabled] = useState(false);
 
-  // Check if semantic search is enabled
   useEffect(() => {
-    const checkSemanticSettings = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('semantic-search', {
-          body: { query: "", tenantId }
+    const checkApiStatus = async () => {
+      const isHealthy = await checkApiHealth();
+      setIsSemanticEnabled(isHealthy);
+      if (!isHealthy) {
+        toast({
+          title: "API Connection Error",
+          description: "Could not connect to the semantic search API",
+          variant: "destructive"
         });
-        
-        if (!error) {
-          setIsSemanticEnabled(true);
-        }
-      } catch (error) {
-        console.log("Semantic search unavailable:", error);
       }
     };
     
-    checkSemanticSettings();
-  }, [tenantId]);
+    checkApiStatus();
+  }, []);
 
-  const handleSearch = useCallback(async (query: string, currentTenantId: string) => {
+  const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setResults([]);
       setIsSearching(false);
@@ -77,21 +71,24 @@ const Index = () => {
     setIsSearching(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('semantic-search', {
-        body: { query, tenantId: currentTenantId }
-      });
-
-      if (error) {
-        console.error("Error from semantic-search function:", error);
-        throw error;
-      }
+      const searchResults = await performSemanticSearch(query);
       
-      setResults(data || []);
+      // Transform API results to match our UI format
+      const transformedResults = searchResults.map(result => ({
+        platform: result.metadata.source as 'slack' | 'jira' | 'confluence' | 'drive',
+        title: result.metadata.topic || 'Document',
+        preview: result.pageContent,
+        timestamp: result.metadata.date || 'Recent',
+        link: '#',
+        score: result.score
+      }));
+      
+      setResults(transformedResults);
     } catch (error) {
       console.error("Error performing semantic search:", error);
       toast({
         title: "Search Error",
-        description: error.message || "Failed to perform semantic search. Falling back to basic search.",
+        description: error.message || "Failed to perform semantic search",
         variant: "destructive"
       });
       
@@ -111,12 +108,6 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center gradient-bg">
       <div className="w-full max-w-4xl px-4 py-8 relative">
-        <div className="absolute right-4 top-4">
-          <TenantIdModal
-            currentTenantId={tenantId}
-            onTenantIdChange={setTenantId}
-          />
-        </div>
         
         <h1 className="font-jakarta text-5xl font-bold text-center mb-8 text-white tracking-wide">
           <span className="bg-gradient-to-r from-white/90 to-white/70 bg-clip-text text-transparent">
@@ -133,7 +124,7 @@ const Index = () => {
           )}
         </div>
         
-        <SearchBar onSearch={handleSearch} isSearching={isSearching} tenantId={tenantId} />
+        <SearchBar onSearch={handleSearch} isSearching={isSearching} />
         
         <div className="mt-8 space-y-4">
           {isSearching ? (
