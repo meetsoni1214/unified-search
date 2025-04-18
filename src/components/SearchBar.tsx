@@ -8,6 +8,7 @@ interface SearchBarProps {
 
 const SearchBar = ({ onSearch }: SearchBarProps) => {
   const [query, setQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,14 +17,41 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
-      <div className="glass-morphism relative flex items-center p-2 rounded-xl shadow-lg">
+      <div 
+        className={`
+          glass-morphism 
+          relative 
+          flex 
+          items-center 
+          p-2 
+          rounded-xl 
+          shadow-lg 
+          transition-all 
+          duration-300 
+          ${isFocused 
+            ? 'ring-2 ring-white/30 border-white/40' 
+            : 'border-white/20'
+          }
+        `}
+      >
         <Search className="w-5 h-5 text-white/70 ml-3" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           placeholder="Search across all platforms..."
-          className="w-full px-4 py-3 bg-transparent text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/20 rounded-xl"
+          className="
+            w-full 
+            px-4 
+            py-3 
+            bg-transparent 
+            text-white 
+            placeholder-white/50 
+            focus:outline-none
+            rounded-xl
+          "
         />
       </div>
     </form>
