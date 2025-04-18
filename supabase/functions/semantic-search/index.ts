@@ -1,7 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { Configuration, OpenAIApi } from "https://esm.sh/openai@3.3.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,24 +26,38 @@ serve(async (req) => {
     console.log("Starting semantic search with query:", query)
     console.log("Using index:", pineconeIndexName)
 
-    // First, generate embeddings using OpenAI
-    const configuration = new Configuration({ apiKey: openaiApiKey })
-    const openai = new OpenAIApi(configuration)
+    // First, generate embeddings using OpenAI directly with fetch API instead of the SDK
+    console.log("Generating embeddings with OpenAI...")
+    const embeddingResponse = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${openaiApiKey}`
+      },
+      body: JSON.stringify({
+        model: "text-embedding-ada-002",
+        input: query
+      })
+    });
 
-    const embeddingResponse = await openai.createEmbedding({
-      model: "text-embedding-ada-002",
-      input: query,
-    })
-
-    if (!embeddingResponse.data || !embeddingResponse.data.data || embeddingResponse.data.data.length === 0) {
-      throw new Error('Failed to generate embeddings')
+    if (!embeddingResponse.ok) {
+      const errorData = await embeddingResponse.text();
+      console.error("OpenAI API error:", errorData);
+      throw new Error(`Failed to generate embeddings: ${embeddingResponse.status} ${errorData}`);
     }
 
-    console.log("Generated embeddings successfully")
-    const queryEmbedding = embeddingResponse.data.data[0].embedding
+    const embeddingData = await embeddingResponse.json();
+    
+    if (!embeddingData.data || !embeddingData.data[0] || !embeddingData.data[0].embedding) {
+      console.error("Unexpected OpenAI response format:", JSON.stringify(embeddingData));
+      throw new Error('Invalid embedding response format from OpenAI');
+    }
+
+    console.log("Generated embeddings successfully");
+    const queryEmbedding = embeddingData.data[0].embedding;
 
     // Query Pinecone with the embedding
-    console.log("Querying Pinecone API...")
+    console.log("Querying Pinecone API...");
     const pineconeResponse = await fetch(`https://api.pinecone.io/v1/indexes/${pineconeIndexName}/query`, {
       method: 'POST',
       headers: {
@@ -57,16 +69,22 @@ serve(async (req) => {
         topK: 10,
         includeMetadata: true
       })
-    })
+    });
 
     if (!pineconeResponse.ok) {
-      const errorText = await pineconeResponse.text()
-      console.error('Pinecone API error:', errorText)
-      throw new Error(`Failed to query Pinecone: ${pineconeResponse.status} ${errorText}`)
+      const errorText = await pineconeResponse.text();
+      console.error('Pinecone API error:', errorText);
+      throw new Error(`Failed to query Pinecone: ${pineconeResponse.status} ${errorText}`);
     }
 
-    const results = await pineconeResponse.json()
-    console.log("Pinecone query successful, matches found:", results.matches?.length || 0)
+    const results = await pineconeResponse.json();
+    
+    if (!results.matches) {
+      console.error('Unexpected Pinecone response format:', JSON.stringify(results));
+      throw new Error('Invalid response format from Pinecone');
+    }
+    
+    console.log("Pinecone query successful, matches found:", results.matches?.length || 0);
     
     // Transform results to match the frontend's expected format
     const transformedResults = results.matches.map((match) => ({
@@ -76,19 +94,19 @@ serve(async (req) => {
       timestamp: match.metadata?.timestamp || 'Unknown time',
       link: match.metadata?.link || '#',
       score: match.score
-    }))
+    }));
 
     return new Response(JSON.stringify(transformedResults), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    });
   } catch (error) {
-    console.error('Error in semantic-search function:', error)
+    console.error('Error in semantic-search function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
-    )
+    );
   }
-})
+});
