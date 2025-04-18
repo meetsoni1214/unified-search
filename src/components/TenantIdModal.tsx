@@ -42,7 +42,7 @@ const TenantIdModal = ({ currentTenantId, onTenantIdChange }: TenantIdModalProps
           className="absolute top-4 right-4 gap-2"
         >
           <Settings2 className="h-4 w-4" />
-          Set Tenant ID
+          Tenant ID: {currentTenantId}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
