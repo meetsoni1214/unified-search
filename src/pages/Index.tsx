@@ -75,17 +75,20 @@ const Index = () => {
       const searchResults = await performSemanticSearch(query);
       
       // Transform API results to match our UI format with the new response structure
-      const transformedResults = searchResults.map(result => ({
-        platform: result.metadata.source as 'slack' | 'jira' | 'confluence' | 'drive',
-        title: result.metadata.topic || result.metadata.file_name || 'Document',
-        // Extract first 150 characters of content as preview
-        preview: result.content.length > 150 
-          ? result.content.substring(0, 150) + '...' 
-          : result.content,
-        timestamp: result.metadata.date || 'Recent',
-        link: '#',
-        score: result.score
-      }));
+      const transformedResults = searchResults
+        // Sort results by score in descending order (highest first)
+        .sort((a, b) => b.score - a.score)
+        .map(result => ({
+          platform: result.metadata.source as 'slack' | 'jira' | 'confluence' | 'drive',
+          title: result.metadata.topic || result.metadata.file_name || 'Document',
+          // Extract first 150 characters of content as preview
+          preview: result.content.length > 150 
+            ? result.content.substring(0, 150) + '...' 
+            : result.content,
+          timestamp: result.metadata.date || 'Recent',
+          link: '#',
+          score: result.score
+        }));
       
       setResults(transformedResults);
     } catch (error) {
@@ -96,12 +99,16 @@ const Index = () => {
         variant: "destructive"
       });
       
-      // Fallback to mock results with basic filtering
-      const filteredResults = mockResults.filter(
-        result =>
-          result.title.toLowerCase().includes(query.toLowerCase()) ||
-          result.preview.toLowerCase().includes(query.toLowerCase())
-      );
+      // Fallback to mock results with basic filtering and sorting
+      const filteredResults = mockResults
+        .filter(
+          result =>
+            result.title.toLowerCase().includes(query.toLowerCase()) ||
+            result.preview.toLowerCase().includes(query.toLowerCase())
+        )
+        // Sort mock results if needed (optional)
+        .sort((a, b) => (b.score || 0) - (a.score || 0));
+      
       setResults(filteredResults);
     }
     
@@ -205,3 +212,4 @@ const Index = () => {
 };
 
 export default Index;
+
