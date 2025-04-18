@@ -43,7 +43,11 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center gradient-bg">
       <div className="w-full max-w-4xl px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8 text-white">Unified Search</h1>
+        <h1 className="font-playfair text-5xl font-bold text-center mb-8 text-white tracking-wide">
+          <span className="bg-gradient-to-r from-white/90 to-white/70 bg-clip-text text-transparent">
+            Unified Search
+          </span>
+        </h1>
         <SearchBar onSearch={handleSearch} />
         
         <div className="mt-8 space-y-4">
