@@ -4,6 +4,7 @@ import SearchResult from "@/components/SearchResult";
 import type { SearchResultProps } from "@/components/SearchResult";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slack, FileText, Database } from "lucide-react";
+import TenantIdModal from "@/components/TenantIdModal";
 
 const mockResults: SearchResultProps[] = [
   {
@@ -40,6 +41,7 @@ const Index = () => {
   const [results, setResults] = useState<SearchResultProps[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
+  const [tenantId, setTenantId] = useState("default");
 
   const handleSearch = useCallback((query: string) => {
     if (!query.trim()) {
@@ -65,7 +67,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center gradient-bg">
-      <div className="w-full max-w-4xl px-4 py-8">
+      <div className="w-full max-w-4xl px-4 py-8 relative">
+        <TenantIdModal
+          currentTenantId={tenantId}
+          onTenantIdChange={setTenantId}
+        />
         <h1 className="font-jakarta text-5xl font-bold text-center mb-8 text-white tracking-wide">
           <span className="bg-gradient-to-r from-white/90 to-white/70 bg-clip-text text-transparent">
             Unified Search
