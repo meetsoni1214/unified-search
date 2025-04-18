@@ -1,5 +1,5 @@
 
-import { ExternalLink, Slack, FileText, Clock } from 'lucide-react';
+import { ExternalLink, FileText, Clock, MessageSquare, FileCode, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface SearchResultProps {
@@ -8,13 +8,14 @@ export interface SearchResultProps {
   preview: string;
   timestamp: string;
   link: string;
+  score?: number;
 }
 
 const platformIcons = {
-  slack: Slack,
-  jira: FileText,
+  slack: MessageSquare,
+  jira: FileCode,
   confluence: FileText,
-  drive: FileText,
+  drive: FileSpreadsheet,
 };
 
 const platformColors = {
@@ -24,7 +25,7 @@ const platformColors = {
   drive: 'text-[#00AC47]',
 };
 
-const SearchResult = ({ platform, title, preview, timestamp, link }: SearchResultProps) => {
+const SearchResult = ({ platform, title, preview, timestamp, link, score }: SearchResultProps) => {
   const Icon = platformIcons[platform];
   const colorClass = platformColors[platform];
 
@@ -41,6 +42,9 @@ const SearchResult = ({ platform, title, preview, timestamp, link }: SearchResul
             <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
               <Clock className="w-3 h-3" />
               <span>{timestamp}</span>
+              {score !== undefined && (
+                <span className="ml-2">Score: {score.toFixed(4)}</span>
+              )}
             </div>
           </div>
         </div>
