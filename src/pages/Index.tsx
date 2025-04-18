@@ -1,9 +1,10 @@
+
 import { useState, useCallback, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
 import type { SearchResultProps } from "@/components/SearchResult";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Slack, FileText, Database, BrainCircuit } from "lucide-react";
+import { MessageSquare, FileText, Database, BrainCircuit } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { checkApiHealth, performSemanticSearch } from "@/services/semanticSearchApi";
 
@@ -160,7 +161,7 @@ const Index = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                   {[
                     {
-                      icon: Slack,
+                      icon: MessageSquare,
                       title: "Conversations",
                       desc: "Search through Slack messages",
                       color: "from-[#4A154B]/20 to-[#4A154B]/10"

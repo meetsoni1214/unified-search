@@ -26,8 +26,9 @@ const platformColors = {
 };
 
 const SearchResult = ({ platform, title, preview, timestamp, link, score }: SearchResultProps) => {
-  const Icon = platformIcons[platform];
-  const colorClass = platformColors[platform];
+  // Add a fallback icon in case the platform doesn't match any in the map
+  const Icon = platformIcons[platform] || FileText;
+  const colorClass = platformColors[platform] || 'text-gray-500';
 
   return (
     <div className="glass-effect rounded-lg p-4 transition-all hover:bg-white/10">
