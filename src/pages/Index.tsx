@@ -1,9 +1,9 @@
-
 import { useState, useCallback } from "react";
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
 import type { SearchResultProps } from "@/components/SearchResult";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Search } from "lucide-react";
 
 const mockResults: SearchResultProps[] = [
   {
@@ -37,22 +37,20 @@ const mockResults: SearchResultProps[] = [
 ];
 
 const Index = () => {
-  const [results, setResults] = useState<SearchResultProps[]>(mockResults);
+  const [results, setResults] = useState<SearchResultProps[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
 
   const handleSearch = useCallback((query: string) => {
-    // Clear search state when query is empty
     if (!query.trim()) {
-      setResults(mockResults);
+      setResults([]);
       setIsSearching(false);
+      setSearchPerformed(false);
       return;
     }
 
-    // Set searching state
     setIsSearching(true);
     
-    // Simulate search delay
     setTimeout(() => {
       const filteredResults = mockResults.filter(
         result =>
@@ -77,7 +75,6 @@ const Index = () => {
         
         <div className="mt-8 space-y-4">
           {isSearching ? (
-            // Loading skeletons
             Array(3).fill(null).map((_, index) => (
               <div key={index} className="glass-effect rounded-lg p-4">
                 <div className="flex gap-3">
@@ -89,12 +86,24 @@ const Index = () => {
                 </div>
               </div>
             ))
-          ) : results.length > 0 ? (
-            results.map((result, index) => (
-              <SearchResult key={index} {...result} />
-            ))
+          ) : searchPerformed ? (
+            results.length > 0 ? (
+              results.map((result, index) => (
+                <SearchResult key={index} {...result} />
+              ))
+            ) : (
+              <div className="text-center text-white/70">No results found</div>
+            )
           ) : (
-            <div className="text-center text-white/70">No results found</div>
+            <div className="text-center space-y-4">
+              <Search className="w-16 h-16 text-white/30 mx-auto" />
+              <div className="text-white/70 max-w-md mx-auto">
+                <h2 className="text-2xl font-medium mb-2">Search Across Platforms</h2>
+                <p className="text-white/50">
+                  Find documents, conversations, and files from Slack, Jira, Confluence, and Google Drive all in one place.
+                </p>
+              </div>
+            </div>
           )}
         </div>
       </div>
