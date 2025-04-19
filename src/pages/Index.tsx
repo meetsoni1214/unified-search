@@ -96,7 +96,7 @@ const Index = () => {
             onResultClick={setSelectedResult}
           />
           
-          {!searchPerformed && <SearchFeatures />}
+          {!isSearching && !searchPerformed && <SearchFeatures />}
         </div>
       </div>
 
