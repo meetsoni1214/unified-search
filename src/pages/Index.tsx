@@ -19,18 +19,20 @@ const Index = () => {
   const handleSync = async () => {
     setIsSyncing(true);
     try {
-      // Fix the URL by using the API_BASE_URL from the semanticSearchApi service
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       
-      const response = await fetch(`${API_URL}/search/process-data`, {
+      // Use a direct API endpoint instead of one that tries to spawn a process
+      const response = await fetch(`${API_URL}/search/sync-data`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ action: 'process-data' }) // Send an action parameter to specify what we want to do
       });
       
       if (!response.ok) {
-        throw new Error('Failed to process data');
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed with status: ${response.status}`);
       }
       
       const data = await response.json();
@@ -41,7 +43,7 @@ const Index = () => {
       
       toast({
         title: "Processing Complete",
-        description: `Successfully processed and updated search data. ${data.steps?.fileCopy || ''}`,
+        description: `Successfully processed search data. ${data.steps?.fileCopy || ''}`,
       });
     } catch (error) {
       console.error('Processing error:', error);
