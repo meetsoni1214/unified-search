@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { performSemanticSearch } from "@/services/semanticSearchApi";
@@ -53,19 +52,17 @@ export function useSearch() {
     try {
       const searchResults = await performSemanticSearch(query);
       
-      const transformedResults = searchResults
-        .sort((a, b) => b.score - a.score)
-        .map(result => ({
-          platform: result.metadata.source as 'slack' | 'jira' | 'confluence' | 'drive',
-          title: result.metadata.topic || result.metadata.file_name || 'Document',
-          preview: result.content.length > 150 
-            ? result.content.substring(0, 150) + '...' 
-            : result.content,
-          timestamp: result.metadata.date || 'Recent',
-          link: '#',
-          score: result.score,
-          content: result.content
-        }));
+      const transformedResults = searchResults.map(result => ({
+        platform: result.metadata.source as 'slack' | 'jira' | 'confluence' | 'drive',
+        title: result.metadata.topic || result.metadata.file_name || 'Document',
+        preview: result.content.length > 150 
+          ? result.content.substring(0, 150) + '...' 
+          : result.content,
+        timestamp: result.metadata.date || 'Recent',
+        link: '#',
+        score: result.score,
+        content: result.content
+      }));
       
       setResults(transformedResults);
     } catch (error) {
@@ -81,8 +78,7 @@ export function useSearch() {
           result =>
             result.title.toLowerCase().includes(query.toLowerCase()) ||
             result.preview.toLowerCase().includes(query.toLowerCase())
-        )
-        .sort((a, b) => (b.score || 0) - (a.score || 0));
+        );
       
       setResults(filteredResults);
     }
