@@ -6,12 +6,42 @@ import { SearchFeatures } from "@/components/SearchFeatures";
 import { SearchResults } from "@/components/SearchResults";
 import SearchBar from "@/components/SearchBar";
 import SearchResultDialog from "@/components/SearchResultDialog";
-import { BrainCircuit } from "lucide-react";
+import { BrainCircuit, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const { results, isSearching, searchPerformed, handleSearch } = useSearch();
   const isSemanticEnabled = useApiHealth();
+  const [isSyncing, setIsSyncing] = useState(false);
   const [selectedResult, setSelectedResult] = useState<{ title: string; content: string } | null>(null);
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/search/sync`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to sync data');
+      }
+      
+      toast({
+        title: "Sync Successful",
+        description: "Search data has been updated from all sources",
+      });
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        title: "Sync Failed",
+        description: "Failed to sync data from sources",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center gradient-bg">
@@ -22,13 +52,23 @@ const Index = () => {
           </span>
         </h1>
         
-        <div className="flex items-center justify-center mb-2">
+        <div className="flex items-center justify-center gap-4 mb-2">
           {isSemanticEnabled && (
-            <div className="flex items-center gap-1 text-green-400 text-sm mb-2">
+            <div className="flex items-center gap-1 text-green-400 text-sm">
               <BrainCircuit className="h-4 w-4" />
               <span>Semantic Search Enabled</span>
             </div>
           )}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="text-white/70 hover:text-white border-white/20 hover:bg-white/5"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Sync Data'}
+          </Button>
         </div>
         
         <SearchBar onSearch={handleSearch} isSearching={isSearching} />
