@@ -1,3 +1,4 @@
+
 interface SearchResult {
   id: string;
   score: number;
@@ -14,8 +15,7 @@ interface SearchResult {
   };
 }
 
-// Define a consistent base URL
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = 'http://localhost:3000';
 
 export async function checkApiHealth(): Promise<boolean> {
   try {
@@ -45,27 +45,6 @@ export async function performSemanticSearch(query: string, topK: number = 5): Pr
     return await response.json();
   } catch (error) {
     console.error('Semantic search error:', error);
-    throw error;
-  }
-}
-
-export async function syncSearchData(action: string = 'process-data') {
-  try {
-    const response = await fetch(`${API_BASE_URL}/search/sync-data`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to sync data: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Sync data error:', error);
     throw error;
   }
 }
