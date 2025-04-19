@@ -1,7 +1,9 @@
+
 interface SearchResult {
   id: string;
   score: number;
   content: string;
+  title?: string; // Add title property as optional
   metadata: {
     document_id?: string;
     file_name?: string;
