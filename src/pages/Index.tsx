@@ -19,23 +19,32 @@ const Index = () => {
   const handleSync = async () => {
     setIsSyncing(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/search/sync`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/search/process-data`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to sync data');
+        throw new Error('Failed to process data');
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to process data');
       }
       
       toast({
-        title: "Sync Successful",
-        description: "Search data has been updated from all sources",
+        title: "Processing Complete",
+        description: `Successfully processed and updated search data. ${data.steps?.fileCopy || ''}`,
       });
     } catch (error) {
-      console.error('Sync error:', error);
+      console.error('Processing error:', error);
       toast({
-        title: "Sync Failed",
-        description: "Failed to sync data from sources",
+        title: "Processing Failed",
+        description: error instanceof Error ? error.message : "Failed to process data",
         variant: "destructive",
       });
     } finally {
