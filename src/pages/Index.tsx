@@ -56,7 +56,20 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center gradient-bg">
+    <div className="min-h-screen flex flex-col items-center gradient-bg relative">
+      <div className="absolute top-4 right-4">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleSync}
+          disabled={isSyncing}
+          className="text-white/70 hover:text-white border-white/20 hover:bg-white/5"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+          {isSyncing ? 'Syncing...' : 'Sync Data'}
+        </Button>
+      </div>
+
       <div className="w-full max-w-4xl px-4 py-8 relative">
         <h1 className="font-jakarta text-5xl font-bold text-center mb-8 text-white tracking-wide">
           <span className="bg-gradient-to-r from-white/90 to-white/70 bg-clip-text text-transparent">
@@ -71,16 +84,6 @@ const Index = () => {
               <span>Semantic Search Enabled</span>
             </div>
           )}
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleSync}
-            disabled={isSyncing}
-            className="text-white/70 hover:text-white border-white/20 hover:bg-white/5"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'Syncing...' : 'Sync Data'}
-          </Button>
         </div>
         
         <SearchBar onSearch={handleSearch} isSearching={isSearching} />
