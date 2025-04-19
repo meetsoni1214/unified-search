@@ -19,7 +19,10 @@ const Index = () => {
   const handleSync = async () => {
     setIsSyncing(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/search/process-data`, {
+      // Fix the URL by using the API_BASE_URL from the semanticSearchApi service
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      
+      const response = await fetch(`${API_URL}/search/process-data`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
