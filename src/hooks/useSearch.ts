@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { performSemanticSearch } from "@/services/semanticSearchApi";
@@ -54,7 +55,7 @@ export function useSearch() {
       
       const transformedResults = searchResults.map(result => ({
         platform: result.metadata.source as 'slack' | 'jira' | 'confluence' | 'drive',
-        title: result.metadata.topic || result.metadata.file_name || 'Document',
+        title: result.title || 'Document',
         preview: result.content.length > 150 
           ? result.content.substring(0, 150) + '...' 
           : result.content,
