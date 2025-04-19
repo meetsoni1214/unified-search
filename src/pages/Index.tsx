@@ -57,13 +57,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center gradient-bg relative">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-10">
         <Button 
           variant="outline" 
           size="sm"
           onClick={handleSync}
           disabled={isSyncing}
-          className="text-white/70 hover:text-white border-white/20 hover:bg-white/5"
+          className="text-white/90 hover:text-white border-white/50 hover:bg-white/10 cursor-pointer"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
           {isSyncing ? 'Syncing...' : 'Sync Data'}
