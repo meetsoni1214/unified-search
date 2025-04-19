@@ -1,4 +1,3 @@
-
 import { ExternalLink, FileText, Clock, MessageSquare, FileCode, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -9,6 +8,8 @@ export interface SearchResultProps {
   timestamp: string;
   link: string;
   score?: number;
+  content?: string;
+  onClick?: () => void;
 }
 
 const platformIcons = {
@@ -25,13 +26,15 @@ const platformColors = {
   drive: 'text-[#00AC47]',
 };
 
-const SearchResult = ({ platform, title, preview, timestamp, link, score }: SearchResultProps) => {
-  // Add a fallback icon in case the platform doesn't match any in the map
+const SearchResult = ({ platform, title, preview, timestamp, link, score, onClick }: SearchResultProps) => {
   const Icon = platformIcons[platform] || FileText;
   const colorClass = platformColors[platform] || 'text-gray-500';
 
   return (
-    <div className="glass-effect rounded-lg p-4 transition-all hover:bg-white/10">
+    <div 
+      className="glass-effect rounded-lg p-4 transition-all hover:bg-white/10 cursor-pointer"
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1">
           <div className={`mt-1 ${colorClass}`}>

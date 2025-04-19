@@ -1,7 +1,7 @@
-
 import { useState, useCallback, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import SearchResult from "@/components/SearchResult";
+import SearchResultDialog from "@/components/SearchResultDialog";
 import type { SearchResultProps } from "@/components/SearchResult";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, FileText, Database, BrainCircuit } from "lucide-react";
@@ -44,6 +44,7 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [isSemanticEnabled, setIsSemanticEnabled] = useState(false);
+  const [selectedResult, setSelectedResult] = useState<{ title: string; content: string } | null>(null);
 
   useEffect(() => {
     const checkApiStatus = async () => {
@@ -74,20 +75,18 @@ const Index = () => {
     try {
       const searchResults = await performSemanticSearch(query);
       
-      // Transform API results to match our UI format with the new response structure
       const transformedResults = searchResults
-        // Sort results by score in descending order (highest first)
         .sort((a, b) => b.score - a.score)
         .map(result => ({
           platform: result.metadata.source as 'slack' | 'jira' | 'confluence' | 'drive',
           title: result.metadata.topic || result.metadata.file_name || 'Document',
-          // Extract first 150 characters of content as preview
           preview: result.content.length > 150 
             ? result.content.substring(0, 150) + '...' 
             : result.content,
           timestamp: result.metadata.date || 'Recent',
           link: '#',
-          score: result.score
+          score: result.score,
+          content: result.content
         }));
       
       setResults(transformedResults);
@@ -99,14 +98,12 @@ const Index = () => {
         variant: "destructive"
       });
       
-      // Fallback to mock results with basic filtering and sorting
       const filteredResults = mockResults
         .filter(
           result =>
             result.title.toLowerCase().includes(query.toLowerCase()) ||
             result.preview.toLowerCase().includes(query.toLowerCase())
         )
-        // Sort mock results if needed (optional)
         .sort((a, b) => (b.score || 0) - (a.score || 0));
       
       setResults(filteredResults);
@@ -153,7 +150,14 @@ const Index = () => {
           ) : searchPerformed ? (
             results.length > 0 ? (
               results.map((result, index) => (
-                <SearchResult key={index} {...result} />
+                <SearchResult 
+                  key={index} 
+                  {...result} 
+                  onClick={() => setSelectedResult({ 
+                    title: result.title, 
+                    content: result.content || "" 
+                  })}
+                />
               ))
             ) : (
               <div className="text-center text-white/70">No results found</div>
@@ -207,9 +211,17 @@ const Index = () => {
           )}
         </div>
       </div>
+
+      {selectedResult && (
+        <SearchResultDialog
+          isOpen={!!selectedResult}
+          onClose={() => setSelectedResult(null)}
+          title={selectedResult.title}
+          content={selectedResult.content}
+        />
+      )}
     </div>
   );
 };
 
 export default Index;
-
