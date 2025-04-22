@@ -27,7 +27,7 @@ export const SearchFeatures = () => {
     <div className="text-center space-y-8">
       <div className="text-white/70 max-w-2xl mx-auto space-y-6">
         <h2 className="text-3xl font-medium bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
-          Search Across All Platforms
+          Across All Platforms
         </h2>
         <p className="text-lg text-white/50 leading-relaxed">
           Find everything you need in one place. Access your team's knowledge instantly.
